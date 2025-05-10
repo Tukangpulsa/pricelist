@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daftar Harga Pulsa</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    #header {
+      position: sticky;
+      top: 0;
+      background: white;
+      padding: 10px;
+      z-index: 100;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    input, select {
+      padding: 8px;
+      margin-right: 10px;
+      width: 45%;
+      max-width: 200px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 8px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+
+    th {
+      background-color: #3498db;
+      color: white;
+    }
+
+    .provider-title {
+      background: #2ecc71;
+      color: white;
+      padding: 10px;
+      margin-top: 20px;
+      text-align: center;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<div id="header">
+  <input type="text" id="searchInput" placeholder="Cari...">
+  <select id="providerSelect">
+    <option value="">Semua Provider</option>
+  </select>
+</div>
+
+<div id="content">Memuat data...</div>
+
+<script>
+  fetch("https://script.google.com/macros/s/AKfycbz_i64mZCjS5FFUYOVxP4u-FwVYl1Fw1zA1OJ90SLqNQhwozCdnJlz3BQD00kJA2w/exec")
+    .then(response => response.json())
+    .then(data => {
+      const contentDiv = document.getElementById("content");
+      const providerSelect = document.getElementById("providerSelect");
+      const searchInput = document.getElementById("searchInput");
+
+      contentDiv.innerHTML = "";
+
+      const grouped = {};
+      data.forEach(item => {
+        const provider = item.PROVIDER || "LAINNYA";
+        if (!grouped[provider]) grouped[provider] = [];
+        grouped[provider].push(item);
+      });
+
+      Object.keys(grouped).forEach(provider => {
+        const option = document.createElement("option");
+        option.value = provider;
+        option.textContent = provider;
+        providerSelect.appendChild(option);
+      });
+
+      function renderTable(filterProvider = "", searchTerm = "") {
+        contentDiv.innerHTML = "";
+
+        for (const provider in grouped) {
+          if (filterProvider && provider !== filterProvider) continue;
+
+          const filteredData = grouped[provider].filter(item =>
+            item.KODE.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.KETERANGAN.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.HARGA.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+
+          if (filteredData.length === 0) continue;
+
+          const section = document.createElement("div");
+          const title = document.createElement("div");
+          title.className = "provider-title";
+          title.textContent = provider;
+          section.appendChild(title);
+
+          const table = document.createElement("table");
+          table.innerHTML = `
+            <thead>
+              <tr><th>Kode</th><th>Keterangan</th><th>Harga</th></tr>
+            </thead>
+            <tbody>
+              ${filteredData.map(row => `
+                <tr>
+                  <td>${row.KODE}</td>
+                  <td>${row.KETERANGAN}</td>
+                  <td>Rp ${parseInt(row.HARGA).toLocaleString('id-ID')}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          `;
+          section.appendChild(table);
+          contentDiv.appendChild(section);
+        }
+      }
+
+      renderTable();
+
+      providerSelect.addEventListener("change", () => {
+        renderTable(providerSelect.value, searchInput.value);
+      });
+
+      searchInput.addEventListener("input", () => {
+        renderTable(providerSelect.value, searchInput.value);
+      });
+    })
+    .catch(error => {
+      document.getElementById("content").textContent = "Gagal memuat data: " + error;
+    });
+</script>
+
+</body>
+</html>
