@@ -1,148 +1,181 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Daftar Harga Pulsa</title>
   <style>
     body {
       font-family: sans-serif;
-      margin: 0;
-      padding: 0;
+      margin: 10px;
+      background: #f5f5f5;
     }
-
-    #header {
+    #sticky-header {
       position: sticky;
       top: 0;
       background: white;
-      padding: 10px;
       z-index: 100;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      padding-bottom: 10px;
     }
-
+    #filter-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
     input, select {
-      padding: 8px;
-      margin-right: 10px;
-      width: 45%;
-      max-width: 200px;
+      padding: 10px;
+      font-size: 1em;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      width: 100%;
     }
-
+    @media screen and (min-width: 600px) {
+      #filter-container {
+        flex-direction: row;
+        justify-content: space-between;
+      }
+      input, select {
+        width: 48%;
+      }
+    }
+    #marquee {
+      background: #ff9800;
+      color: white;
+      padding: 8px 12px;
+      font-weight: bold;
+      font-size: 0.95em;
+      white-space: nowrap;
+      overflow: hidden;
+      position: sticky;
+      top: 78px;
+      z-index: 99;
+    }
+    #marquee span {
+      display: inline-block;
+      padding-left: 100%;
+      animation: scrollText 15s linear infinite;
+    }
+    @keyframes scrollText {
+      0% { transform: translateX(0%); }
+      100% { transform: translateX(-100%); }
+    }
+    .provider-title {
+      background: #2ecc71;
+      color: white;
+      padding: 12px;
+      margin-top: 30px;
+      text-align: center;
+      font-size: 1.2em;
+      border-radius: 6px;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 20px;
-      font-size: 14px;
+      margin-top: 10px;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
     }
-
     th, td {
-      padding: 8px;
-      border: 1px solid #ccc;
+      padding: 10px;
+      border: 1px solid #ddd;
       text-align: center;
+      font-size: 0.95em;
     }
-
     th {
       background-color: #3498db;
       color: white;
     }
-
-    .provider-title {
-      background: #2ecc71;
-      color: white;
-      padding: 10px;
-      margin-top: 20px;
-      text-align: center;
+    td a {
+      color: #3498db;
+      text-decoration: none;
       font-weight: bold;
     }
   </style>
 </head>
 <body>
 
-<div id="header">
-  <input type="text" id="searchInput" placeholder="Cari...">
-  <select id="providerSelect">
-    <option value="">Semua Provider</option>
-  </select>
+<div id="sticky-header">
+  <div id="filter-container">
+    <input type="text" id="searchInput" placeholder="Cari kode atau keterangan...">
+    <select id="providerSelect">
+      <option value="SEMUA">Tampilkan Semua Provider</option>
+    </select>
+  </div>
 </div>
+
+<div id="marquee"><span>Silakan klik kode untuk langsung pesan via WhatsApp. Terima kasih telah menggunakan layanan kami!</span></div>
 
 <div id="content">Memuat data...</div>
 
 <script>
-  fetch("https://script.google.com/macros/s/AKfycbz_i64mZCjS5FFUYOVxP4u-FwVYl1Fw1zA1OJ90SLqNQhwozCdnJlz3BQD00kJA2w/exec")
+  let allData = {};
+  const contentDiv = document.getElementById("content");
+  const providerSelect = document.getElementById("providerSelect");
+  const searchInput = document.getElementById("searchInput");
+
+  const nomorAdmin = "6285719484526"; // GANTI dengan nomor admin-mu
+
+  fetch("https://script.google.com/macros/s/AKfycbx1ha4Inz2weiwq4uj1jEMsjM7qv5j-UF72l8-qFhk3zZ8joKQU-TmO2snO5y6r_ytQ/exec")
     .then(response => response.json())
     .then(data => {
-      const contentDiv = document.getElementById("content");
-      const providerSelect = document.getElementById("providerSelect");
-      const searchInput = document.getElementById("searchInput");
-
       contentDiv.innerHTML = "";
-
-      const grouped = {};
       data.forEach(item => {
         const provider = item.PROVIDER || "LAINNYA";
-        if (!grouped[provider]) grouped[provider] = [];
-        grouped[provider].push(item);
-      });
-
-      Object.keys(grouped).forEach(provider => {
-        const option = document.createElement("option");
-        option.value = provider;
-        option.textContent = provider;
-        providerSelect.appendChild(option);
-      });
-
-      function renderTable(filterProvider = "", searchTerm = "") {
-        contentDiv.innerHTML = "";
-
-        for (const provider in grouped) {
-          if (filterProvider && provider !== filterProvider) continue;
-
-          const filteredData = grouped[provider].filter(item =>
-            item.KODE.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.KETERANGAN.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.HARGA.toLowerCase().includes(searchTerm.toLowerCase())
-          );
-
-          if (filteredData.length === 0) continue;
-
-          const section = document.createElement("div");
-          const title = document.createElement("div");
-          title.className = "provider-title";
-          title.textContent = provider;
-          section.appendChild(title);
-
-          const table = document.createElement("table");
-          table.innerHTML = `
-            <thead>
-              <tr><th>Kode</th><th>Keterangan</th><th>Harga</th></tr>
-            </thead>
-            <tbody>
-              ${filteredData.map(row => `
-                <tr>
-                  <td>${row.KODE}</td>
-                  <td>${row.KETERANGAN}</td>
-                  <td>Rp ${parseInt(row.HARGA).toLocaleString('id-ID')}</td>
-                </tr>
-              `).join("")}
-            </tbody>
-          `;
-          section.appendChild(table);
-          contentDiv.appendChild(section);
+        if (!allData[provider]) {
+          allData[provider] = [];
+          const opt = document.createElement("option");
+          opt.value = provider;
+          opt.textContent = provider;
+          providerSelect.appendChild(opt);
         }
-      }
-
+        allData[provider].push(item);
+      });
       renderTable();
-
-      providerSelect.addEventListener("change", () => {
-        renderTable(providerSelect.value, searchInput.value);
-      });
-
-      searchInput.addEventListener("input", () => {
-        renderTable(providerSelect.value, searchInput.value);
-      });
-    })
-    .catch(error => {
-      document.getElementById("content").textContent = "Gagal memuat data: " + error;
     });
+
+  function renderTable() {
+    const selectedProvider = providerSelect.value;
+    const keyword = searchInput.value.toLowerCase();
+    contentDiv.innerHTML = "";
+
+    const providersToShow = selectedProvider === "SEMUA" ? Object.keys(allData) : [selectedProvider];
+
+    providersToShow.forEach(provider => {
+      const rows = allData[provider].filter(item =>
+        item.KODE?.toLowerCase().includes(keyword) ||
+        item.KETERANGAN?.toLowerCase().includes(keyword)
+      );
+      if (rows.length === 0) return;
+
+      const section = document.createElement("div");
+      const title = document.createElement("div");
+      title.className = "provider-title";
+      title.textContent = provider;
+      section.appendChild(title);
+
+      const table = document.createElement("table");
+      table.innerHTML = `
+        <thead>
+          <tr><th>Kode</th><th>Keterangan</th><th>Harga</th></tr>
+        </thead>
+        <tbody>
+          ${rows.map(row => `
+            <tr>
+              <td><a href="https://wa.me/${nomorAdmin}?text=${encodeURIComponent(row.KODE)}" target="_blank">${row.KODE}</a></td>
+              <td>${row.KETERANGAN}</td>
+              <td>Rp ${Number(row.HARGA).toLocaleString("id-ID")}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      `;
+      section.appendChild(table);
+      contentDiv.appendChild(section);
+    });
+  }
+
+  providerSelect.addEventListener("change", renderTable);
+  searchInput.addEventListener("input", renderTable);
 </script>
 
 </body>
