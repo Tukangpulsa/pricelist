@@ -104,7 +104,7 @@
   </div>
 </div>
 
-<div id="marquee"><span>Silakan klik kode untuk langsung pesan via WhatsApp. Terima kasih telah menggunakan layanan kami!</span></div>
+<div id="marquee"><span>Silakan klik kode untuk langsung Transaksi. Terima kasih telah menggunakan layanan kami!</span></div>
 
 <div id="content">Memuat data...</div>
 
@@ -114,7 +114,7 @@
   const providerSelect = document.getElementById("providerSelect");
   const searchInput = document.getElementById("searchInput");
 
-  const nomorAdmin = "6285719484526"; // GANTI dengan nomor admin-mu
+  const nomorAdmin = "AZMcenter_bot"; // GANTI dengan nomor admin-mu
 
   fetch("https://script.google.com/macros/s/AKfycbz_i64mZCjS5FFUYOVxP4u-FwVYl1Fw1zA1OJ90SLqNQhwozCdnJlz3BQD00kJA2w/exec")
     .then(response => response.json())
@@ -162,7 +162,7 @@
         <tbody>
           ${rows.map(row => `
             <tr>
-              <td><a href="https://wa.me/${nomorAdmin}?text=${encodeURIComponent(row.KODE)}" target="_blank">${row.KODE}</a></td>
+              <td><a href="https://t.me/${nomorAdmin}?text=${encodeURIComponent(row.KODE)}" target="_blank">${row.KODE}</a></td>
               <td>${row.KETERANGAN}</td>
               <td>Rp ${Number(row.HARGA).toLocaleString("id-ID")}</td>
             </tr>
